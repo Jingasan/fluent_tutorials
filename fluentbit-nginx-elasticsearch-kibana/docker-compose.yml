@@ -1,0 +1,50 @@
+version: "3"
+services:
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    ports:
+      - 80:80
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: "docker1.{{.Name}}"
+    depends_on:
+      - fluent-bit
+  fluent-bit:
+    container_name: "fluentd"
+    image: cr.fluentbit.io/fluent/fluent-bit:2.0
+    volumes:
+      - ./fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+    depends_on:
+      - elasticsearch
+    ports:
+      - 24224:24224
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
+    ports:
+      - 9200:9200
+    environment:
+      - cluster.name=es-cluster # Cluster名
+      - node.name=es01 # Node名
+      - discovery.type=single-node # Default: multi-node
+      # Elasticsearchが複数ノードクラスターを形成するかどうかの指定
+      - xpack.security.enabled=false # セキュリティ機能の有効/無効
+      - bootstrap.memory_lock=true # メモリスワップの禁止
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # JavaVMのヒープサイズ
+    volumes:
+      - elasticsearchdata:/usr/share/elasticsearch/data
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:7.2.0
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: "http://elasticsearch:9200"
+    depends_on:
+      - elasticsearch
+volumes:
+  elasticsearchdata: # Elasticsearch log data
+    driver: local
