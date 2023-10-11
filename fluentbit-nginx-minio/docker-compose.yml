@@ -1,0 +1,38 @@
+version: "3"
+services:
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    ports:
+      - 80:80
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: "contaier.{{.Name}}"
+    depends_on:
+      - fluent-bit
+  fluent-bit:
+    container_name: "fluentd"
+    image: cr.fluentbit.io/fluent/fluent-bit:2.0
+    volumes:
+      - ./fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+    depends_on:
+      - minio
+    ports:
+      - 24224:24224
+    environment:
+      AWS_ACCESS_KEY_ID: minioadmin # MinIOアクセスキー
+      AWS_SECRET_ACCESS_KEY: minioadmin # MinIOアクセスキー
+  minio:
+    container_name: minio
+    image: minio/minio:latest
+    ports:
+      - "9000:9000" # APIポート番号
+      - "9090:9090" # 管理コンソール画面ポート番号
+    volumes:
+      - ./data:/data
+    command: minio server --console-address ":9090" /data
+    environment:
+      MINIO_ROOT_USER: minioadmin # ROOTユーザー名
+      MINIO_ROOT_PASSWORD: minioadmin # ROOTパスワード
