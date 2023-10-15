@@ -13,7 +13,7 @@ services:
     depends_on:
       - fluent-bit
   fluent-bit:
-    container_name: "fluentd"
+    container_name: "fluent-bit"
     image: cr.fluentbit.io/fluent/fluent-bit:2.0
     volumes:
       - ./fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
