@@ -1,0 +1,22 @@
+version: "3"
+services:
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    ports:
+      - 80:80
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: "contaier.{{.Name}}"
+    depends_on:
+      - fluent-bit
+  fluent-bit:
+    container_name: "fluentd"
+    image: cr.fluentbit.io/fluent/fluent-bit:2.1.10
+    volumes:
+      - ./fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./data:/tmp
+    ports:
+      - 24224:24224
